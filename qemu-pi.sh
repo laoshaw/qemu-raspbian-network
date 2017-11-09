@@ -23,16 +23,20 @@
 #   For the network bridge configuration, this needs to be in /etc/sudoers
 #      Cmnd_Alias      QEMU=/usr/bin/ip,/usr/bin/modprobe,/usr/bin/brctl
 #      %kvm     ALL=NOPASSWD: QEMU
+#
+#  Modified for Ubuntu 16.04, e.g. Ubuntu has built-in tun module.
+#  https://ownyourbits.com/2017/02/06/raspbian-on-qemu-with-network-access/
+#  Login in via https://IP:4443 as pi and password raspberry
 
 IMG=$1
 KERNEL=kernel-qemu-4.4.34-jessie
 
-NO_NETWORK=1            # set to 1 to skip network configuration
+NO_NETWORK=0            # set to 1 to skip network configuration
 IFACE=enp3s0            # interface that we currently use for internet
 BRIDGE=br0              # name for the bridge we will create to share network with the raspbian img
 MAC='52:54:be:36:42:a9' # comment this line for random MAC (maybe annoying if on DHCP)
-BINARY_PATH=/usr/bin    # path prefix for binaries
-NO_GRAPHIC=0            # set to 1 to start in no graphic mode
+BINARY_PATH=/sbin       # path prefix for binaries
+NO_GRAPHIC=1            # set to 1 to start in no graphic mode
 
 # sanity checks
 type qemu-system-arm &>/dev/null || { echo "QEMU ARM not found"       ; exit 1; }
@@ -45,8 +49,8 @@ test -f $IMG && test -f $KERNEL  || { echo "$IMG or $KERNEL not found"; exit 1; 
     IP=$( ip address show dev "$IFACE" | grep global | grep -oP '\d{1,3}(.\d{1,3}){3}' | head -1 )
     [[ "$IP" == "" ]]      && { echo "no IP found for $IFACE"; NO_NETWORK=1; }
     type brctl &>/dev/null || { echo "brctl is not installed"; NO_NETWORK=1; }
-    modprobe tun &>/dev/null
-    grep -q tun <(lsmod)   || { echo "need tun module"       ; NO_NETWORK=1; }
+    #modprobe tun &>/dev/null
+    #grep -q tun <(lsmod)   || { echo "need tun module"       ; NO_NETWORK=1; }
 }
 
 # network configuration
